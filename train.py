@@ -6,10 +6,10 @@ import utils
 import codecs
 from classifier_cnn import CNNClassifier
 
-dev_sample_percentage = .1
+dev_sample_percentage = .01
 
-positive_data_file = "./data/pos.txt"
-negative_data_file = "./data/neg.txt"
+positive_data_file = "pos.txt"
+negative_data_file = "neg.txt"
 
 embedding_dim = 128
 filter_sizes = "3,5,8"
@@ -17,7 +17,7 @@ num_filters = 128
 dropout_keep_prob = 0.5
 l2_reg_lambda = 0.0
 
-batch_size = 64
+batch_size = 32
 num_epochs = 200
 evaluate_every = 100
 checkpoint_every = 100
@@ -50,7 +50,10 @@ print("Train/Dev split: {:d}/{:d}".format(len(y_train), len(y_dev)))
 with tf.Graph().as_default():
     session_conf = tf.ConfigProto(
         allow_soft_placement=allow_soft_placement,
-        log_device_placement=log_device_placement)
+        log_device_placement=log_device_placement,)
+    session_conf.gpu_options.allow_growth = True
+    session_conf.gpu_options.per_process_gpu_memory_fraction = 0.40
+    session_conf.gpu_options.allow_growth = True
     sess = tf.Session(config=session_conf)
 
     with sess.as_default():
@@ -181,7 +184,7 @@ with tf.Graph().as_default():
 
             if current_step % evaluate_every == 0:
                 print("\nEvaluation:")
-                dev_step(x_dev, y_dev, writer=dev_summary_writer)
+                dev_step(x_dev[:100], y_dev[:100], writer=dev_summary_writer)
                 print("")
 
             if current_step % checkpoint_every == 0:

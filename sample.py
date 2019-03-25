@@ -18,8 +18,8 @@ def main():
 
 def sample(args):
     print('Loading data')
-    positive_data_file = "./data/pos.txt"
-    negative_data_file = "./data/neg.txt"
+    positive_data_file = "./pos.txt"
+    negative_data_file = "./neg.txt"
     x, y, vocabulary, vocabulary_inv = utils.load_data(positive_data_file, negative_data_file)
 
     text = [list(args.text)]
@@ -45,9 +45,9 @@ def sample(args):
 
             predicted_result = sess.run(predictions, {input_x: raw_x, dropout_keep_prob: 1.0})
             if (predicted_result[0] == 0):
-                print(args.text + ": negative")
+                print(args.text + ": other")
             else:
-                print(args.text + ": positive")
+                print(args.text + ": computer science")
 
 
 if __name__ == '__main__':

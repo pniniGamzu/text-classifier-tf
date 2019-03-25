@@ -3,6 +3,14 @@ import re
 import itertools
 from collections import Counter
 
+from io import StringIO
+from pdfminer.pdfinterp import PDFResourceManager, PDFPageInterpreter
+from pdfminer.converter import TextConverter
+from pdfminer.layout import LAParams
+from pdfminer.pdfpage import PDFPage
+import os
+import re
+
 
 def keep_two_dup_chars(string):
     counter = 0
@@ -54,7 +62,7 @@ def load_data_from_disk(positive_data_file, negative_data_file):
     negative_sentences = list(set(open(negative_data_file, "r", encoding="utf8").readlines()))
     negative_sentences = [s.strip() for s in negative_sentences]
 
-    # Make sure that data contains same size of negative and positive data (assume: snegative < positive)
+    # Make sure that data contains same size of negative and positive data (assume: negative < positive)
     positive_sentences = positive_sentences[:len(negative_sentences)]
 
     # Print Validation
@@ -63,6 +71,7 @@ def load_data_from_disk(positive_data_file, negative_data_file):
 
     # Split by words
     X = positive_sentences + negative_sentences
+    print('clean strings')
     X = [clean_str(sent) for sent in X]
 
     positive_labels = [[1, 0] for _ in positive_sentences]
@@ -79,11 +88,12 @@ def pad_sentences(sentences, padding_word="<PAD/>", maxlen=0):
      Returns padded sentences.
     """
 
+    print('pad sentences...')
     if maxlen > 0:
         sequence_length = maxlen
     else:
         sequence_length = max(len(s) for s in sentences)
-
+    print('max sequence length: {}'.format(sequence_length))
     padded_sentences = []
     for i in range(len(sentences)):
         sentence = sentences[i]
@@ -168,3 +178,49 @@ def load_data(positive_data_file, negative_data_file):
     x, y = build_input_data(sentences_padded, labels, vocabulary)
 
     return [x, y, vocabulary, vocabulary_inv]
+
+
+def convert(fname, pages=None):
+    if not pages:
+        pagenums = set()
+    else:
+        pagenums = set(pages)
+
+    output = StringIO()
+    manager = PDFResourceManager()
+    converter = TextConverter(manager, output, laparams=LAParams())
+    interpreter = PDFPageInterpreter(manager, converter)
+
+    infile = open(fname, 'rb')
+    for page in PDFPage.get_pages(infile, pagenums):
+        interpreter.process_page(page)
+    infile.close()
+    converter.close()
+    text = output.getvalue()
+    output.close
+
+    return text
+
+
+# converts all pdfs in directory pdfDir, saves all resulting txt files to txtdir
+def convertMultiple(pdfDir, txtDir):
+    if pdfDir == "": pdfDir = os.getcwd() + "\\"  # if no pdfDir passed in
+    for pdf in os.listdir(pdfDir):  # iterate through pdfs in pdf directory
+
+        fileExtension = pdf.split(".")[-1]
+        if fileExtension == "pdf":
+            pdfFilename = os.path.join(pdfDir, pdf)
+            print("Pre:  ", pdfFilename)
+            text = convert(pdfFilename)  # get string of text content of pdf
+
+            pdf = pdf[:-4] + ".txt"
+            textFilename = os.path.join(txtDir, pdf)
+            print("Post:  ", textFilename)
+
+            textFile = open(textFilename, "wb")  # make text file
+            text = text.encode('utf-8', 'ignore')
+            # text=text.replace(chr(272)," ")
+
+            textFile.write(text)
+            textFile.close()
+        # textFile.write(text) #write text to text file

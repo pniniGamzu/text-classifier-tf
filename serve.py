@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+import sys
 import tensorflow as tf
 import utils
 from flask import Flask, request, jsonify
@@ -9,15 +9,17 @@ tf.flags.DEFINE_integer("batch_size", 64, "Batch Size (default: 64)")
 tf.flags.DEFINE_string("checkpoint_dir", "", "Checkpoint directory from training run")
 
 FLAGS = tf.flags.FLAGS
-FLAGS._parse_flags()
+# FLAGS._parse_flags()
+FLAGS(sys.argv)
+
 print("\nParameters:")
 for attr, value in sorted(FLAGS.__flags.items()):
     print("{}={}".format(attr.upper(), value))
 print("")
 
 print('Loading data')
-positive_data_file = "./data/pos.txt"
-negative_data_file = "./data/neg.txt"
+positive_data_file = "./pos.txt"
+negative_data_file = "./neg.txt"
 x, y, vocabulary, vocabulary_inv = utils.load_data(positive_data_file, negative_data_file)
 
 """
@@ -54,6 +56,7 @@ def predict():
 
     return jsonify({'result': predicted_results[0]})
 
-
+# from client: {text: "this article is about robotics and vision"}
+# to client: {result: 0}
 if __name__ == '__main__':
     app.run(debug=True)
