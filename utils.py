@@ -192,8 +192,12 @@ def convert(fname, pages=None):
     interpreter = PDFPageInterpreter(manager, converter)
 
     infile = open(fname, 'rb')
-    for page in PDFPage.get_pages(infile, pagenums):
-        interpreter.process_page(page)
+    try:
+        for page in PDFPage.get_pages(infile, pagenums):
+            interpreter.process_page(page)
+    except:
+        infile.close()
+        raise ValueError('cannot convert pdf to text')
     infile.close()
     converter.close()
     text = output.getvalue()

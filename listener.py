@@ -5,10 +5,32 @@ import os
 import shutil
 import time
 import random
+
 from collections import Counter
 
 def most_common(lst):
     return max(set(lst), key=lst.count)
+
+def evaluate_preformance(filename, dir, res_list):
+    print("file: ", filename, " classified to folder: ", dir)
+    # TP
+    if filename.startswith("1") and dir.endswith("CS"):
+        res_list[0] = res_list[0]+1
+    # FN
+    if filename.startswith("1") and dir.endswith("OT"):
+        res_list[1] = res_list[1]+1
+    # TN
+    if filename.startswith("0") and dir.endswith("OT"):
+        res_list[2] = res_list[2]+1
+    # FP
+    if filename.startswith("0") and dir.endswith("CS"):
+        res_list[3] = res_list[3]+1
+    #EXP
+    if(dir.endswith("Default")):
+        res_list[4] = res_list[4]+1
+
+    print(res_list)
+    return res_list
 
 
 def run_model(args, graph, sess, x, y, vocabulary, text):
@@ -37,17 +59,18 @@ def run_model(args, graph, sess, x, y, vocabulary, text):
     predicted_result = sess.run(predictions, {input_x: raw_x, dropout_keep_prob: 1.0})
     return predicted_result
 
-
 def listener(args):
     path_to_watch = args.dir
     before = dict([(f, None) for f in os.listdir(path_to_watch)])
+    #tp fn tn fp exp
+    evaluate_res = [0, 0, 0, 0, 0]
 
     positive_data_file = "./pos.txt"
     negative_data_file = "./neg.txt"
     x, y, vocabulary, _ = utils.load_data(positive_data_file, negative_data_file)
 
     graph = tf.Graph()
-    with graph.as_default():   
+    with graph.as_default():
         sess = tf.Session()
         with sess.as_default():
             while True:
@@ -62,8 +85,8 @@ def listener(args):
                             res = 0
                             if filename.endswith(".pdf") or filename.endswith(".txt"):
                                 if filename.endswith(".pdf"):
-                                        text = utils.convert(os.path.join(args.dir, filename))
-                                        text = text.splitlines()
+                                    text = utils.convert(os.path.join(args.dir, filename))
+                                    text = text.splitlines()
                                 else:
                                     with open(os.path.join(args.dir, filename), encoding="utf8") as f:
                                         text = f.readlines()
@@ -86,11 +109,10 @@ def listener(args):
                             else:
                                 print(str(filename) + " is not a text file\n------move it to all_files folder------")
                                 directory = args.all_f
-
                         except:
                             print("an error occurred during classifing the file: %s" % filename)
-                        finally:
                             directory = args.all_f
+
                         if not os.path.exists(directory):
                             os.makedirs(directory)
                         if (os.path.isfile(os.path.join(directory, filename)) == False):
@@ -98,6 +120,8 @@ def listener(args):
                         else:
                             print("the file already exists in the destination folder\nthe file removes from the downloads folder")
                             os.remove(os.path.join(args.dir, filename))
+                        evaluate_res = evaluate_preformance(filename, directory, evaluate_res)
+
                 before = after
 
 
@@ -106,13 +130,13 @@ def main():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--dir', type=str, default='/Downloads',
                         help='directory to Downloads folder')
-    parser.add_argument('--cs_f', type=str, default='CS',
+    parser.add_argument('--cs_f', type=str, default='/CS',
                         help='directory to output folder of the cs files')
-    parser.add_argument('--otr_f', type=str, default='Others',
+    parser.add_argument('--otr_f', type=str, default='/OT',
                         help='directory to output folder of the others files')
-    parser.add_argument('--all_f', type=str, default='all_files',
+    parser.add_argument('--all_f', type=str, default='/Default',
                         help='directory to folder all the others files')
-    parser.add_argument('--checkpoint_dir', type=str, default='save',
+    parser.add_argument('--checkpoint_dir', type=str, default='/Checkpoints',
                         help='model directory to store checkpoints models')
     args = parser.parse_args()
     listener(args)

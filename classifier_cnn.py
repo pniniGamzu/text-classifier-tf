@@ -18,7 +18,6 @@ class CNNClassifier(object):
         l2_loss = tf.constant(0.0)
 
         # Embedding layer
-        # TODO: check tf.device('/cpu:0')
         with tf.name_scope("embedding"):
             self.W = tf.Variable(
                 tf.random_uniform([vocab_size, embedding_size], -1.0, 1.0),

@@ -6,7 +6,7 @@ from flask import Flask, request, jsonify
 
 # Server Parameters
 tf.flags.DEFINE_integer("batch_size", 64, "Batch Size (default: 64)")
-tf.flags.DEFINE_string("checkpoint_dir", "", "Checkpoint directory from training run")
+tf.flags.DEFINE_string("checkpoint_dir", "C:/Users/bb02/Desktop/Listener/Checkpoints", "Checkpoint directory from training run")
 
 FLAGS = tf.flags.FLAGS
 # FLAGS._parse_flags()
@@ -48,7 +48,7 @@ app = Flask(__name__)
 @app.route('/predict', methods=['POST'])
 def predict():
     if not request.json or not 'text' in request.json:
-        abort(400)
+        exit(400)
 
     text = request.json['text']
     raw_x = utils.sentence_to_index(text, vocabulary, x.shape[1])
@@ -59,4 +59,4 @@ def predict():
 # from client: {text: "this article is about robotics and vision"}
 # to client: {result: 0}
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, port=5080)

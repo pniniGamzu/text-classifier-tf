@@ -34,7 +34,6 @@ print("Loading data...")
 x_text, y, vocabulary, vocabulary_inv = utils.load_data(positive_data_file, negative_data_file)
 
 # Split train/test set
-# TODO: This is very crude, should use cross-validation
 dev_sample_index = -1 * int(dev_sample_percentage * float(len(y)))
 print('dev_sample_percentage: {}\nlen(y): {}\ndev_sample_index: {}'.format(dev_sample_percentage, len(y),
                                                                            dev_sample_index))
@@ -53,7 +52,6 @@ with tf.Graph().as_default():
         log_device_placement=log_device_placement,)
     session_conf.gpu_options.allow_growth = True
     session_conf.gpu_options.per_process_gpu_memory_fraction = 0.40
-    session_conf.gpu_options.allow_growth = True
     sess = tf.Session(config=session_conf)
 
     with sess.as_default():
@@ -125,10 +123,6 @@ with tf.Graph().as_default():
             os.makedirs(checkpoint_dir)
 
         saver = tf.train.Saver(tf.global_variables(), max_to_keep=num_checkpoints)
-
-        # Write vocabulary
-        # TODO: fix this
-        # vocab_processor.save(os.path.join(out_dir, "vocab"))
 
         # Initialize all variables
         sess.run(tf.global_variables_initializer())
